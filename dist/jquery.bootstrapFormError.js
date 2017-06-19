@@ -1,14 +1,36 @@
 (function ($) {
 
-    $.fn.bootstrapFromError = function () {
+    $.fn.bootstrapFromError = function (options) {
 
         var _this = this;
+        
+        var settings = $.extend(true, {
+            messageElement: {
+                tag: 'div',
+                attributes: {
+                    class: 'help-block',
+                }
+            }
+        }, options)
+        
+        var getMessageElementString = function() {
+            var search = settings.messageElement.tag;
+            for(var i in settings.messageElement.attributes) {
+                search += `[${i}="${settings.messageElement.attributes[i]}"]`
+            }
+            return search;
+        }
 
         /**
          * Hide form errors
          */
-        this.hide = function () {
-            $(this).find('.js-error').hide();
+        this.reset = function () {
+            $(this).find(getMessageElementString()).html('');
+            
+            $(this).find('.form-group')
+                .removeClass('has-success')
+                .removeClass('has-warning')
+                .removeClass('has-error');
             return this;
         }
 
@@ -17,16 +39,18 @@
          * @param String[] errors
          * @return boolean - return true if has errors
          */
-        this.show = function (errors) {
+        this.set = function (errors, type) {
             for (var i in errors) {
-                var errorsStr = '';
-                for (var j in errors[i]) {
-                    errorsStr += '<div>' + errors[i][j] + '</div>';
+                var input = $(this).find(`:input[name="${i}"]`);
+                input.next(getMessageElementString())
+                    .html(errors[i].join('<br />'));
+            
+                
+            
+                if(typeof type == 'string') {
+                    console.log(input.closest('.form-group'));
+                    input.closest('.form-group').addClass('has-' + type);
                 }
-                $('.js-error[data-name="' + i + '"], .js-error[data-name="' + i + '[]"]')
-                        .show()
-                        .find('.js-error__message')
-                        .html(errorsStr);
             }
             return this;
         }
@@ -35,26 +59,17 @@
          * Add errors html for every inputs in form
          */
         this.init = function () {
-            $(this).find('input').each(function () {
-                var html = 
-                        '<div class="alert alert-aquamarine alert-fill alert-close alert-dismissible fade in js-error" data-name="' + $(this).attr('name') + '" >' +
-                            '<button type="button" class="close" aria-label="Close">' +
-                                '<span>×</span>' +
-                            '</button>' +
-                            '<div class="js-error__message"></div>' +
-                        '</div>';
-                $(this).parents('.form-group').first().after(html);
-
-                $(_this).find('.js-error .close').click(function (e) {
-                    e.preventDefault();
-                    $(this).parents('.js-error').first().hide();
-                }).each(function () {
-                    $(this).parents('.js-error').first().hide();
-                });
+            $(this).find(':input').each(function () {
+                if(!$(this).next().is(getMessageElementString())) {
+                    $(this).after(`<${settings.messageElement.tag}></${settings.messageElement.tag}>`)
+                    for(var i in settings.messageElement.attributes) {
+                        $(this).next().attr(i, settings.messageElement.attributes[i]);
+                    }
+                }
             });
             return this;
         }
-
+        
         if (typeof this[arguments[0]] == 'function') {
             var args = $.extend([], arguments);
             args.splice(0, 1);

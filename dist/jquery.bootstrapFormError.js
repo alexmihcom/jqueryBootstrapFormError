@@ -45,10 +45,7 @@
                 input.next(getMessageElementString())
                     .html(errors[i].join('<br />'));
             
-                
-            
                 if(typeof type == 'string') {
-                    console.log(input.closest('.form-group'));
                     input.closest('.form-group').addClass('has-' + type);
                 }
             }
@@ -59,7 +56,7 @@
          * Add errors html for every inputs in form
          */
         this.init = function () {
-            $(this).find(':input').each(function () {
+            $(this).find(':input').not('button, input[type="button"]').each(function () {
                 if(!$(this).next().is(getMessageElementString())) {
                     $(this).after(`<${settings.messageElement.tag}></${settings.messageElement.tag}>`)
                     for(var i in settings.messageElement.attributes) {
